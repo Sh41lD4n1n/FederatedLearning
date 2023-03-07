@@ -46,7 +46,7 @@ def init_params(net):
 #term_width = int(term_width)
 term_width = 80
 
-TOTAL_BAR_LENGTH = 65.
+TOTAL_BAR_LENGTH = 50.
 last_time = time.time()
 begin_time = last_time
 def progress_bar(current, total, msg=None):

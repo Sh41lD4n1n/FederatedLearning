@@ -108,7 +108,7 @@ class Model:
     def recover_from_checkpoints(self):
         # Load checkpoint.
         assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
-        assert os.path.exists('./checkpoint/{self.name}_ckpt.pth'), 'Error: no checkpoints for model {self.name}!'
+        assert os.path.exists(f'./checkpoint/{self.name}_ckpt.pth'), f'Error: no checkpoints for model {self.name}!'
         checkpoint = torch.load(f'./checkpoint/{self.name}_ckpt.pth')
         
         self.net.load_state_dict(checkpoint['net'])
@@ -123,7 +123,7 @@ class Model:
         }
         if not os.path.isdir('checkpoint'):
             os.mkdir('checkpoint')
-        torch.save(state, './checkpoint/{self.name}_ckpt.pth')
+        torch.save(state, f'./checkpoint/{self.name}_ckpt.pth')
     
     def init_model(self):
         pass
@@ -149,6 +149,8 @@ class Model:
 
             progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
                         % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
+        
+        self.stat_collector.handle_train(loss=train_loss/(batch_idx+1),accuracy=correct/total)
 
 
     def test(self,testloader):
@@ -169,13 +171,13 @@ class Model:
 
                 progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
                             % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
-        self.stat_collector.handle_test(loss=test_loss,accuracy=correct/total)
+        self.stat_collector.handle_test(loss=test_loss/(batch_idx+1),accuracy=correct/total)
 
         # Save checkpoint.
-        acc = 100.*correct/total
-        if acc > self.best_acc:
-            self.best_acc = acc 
-            self.save_checkpoints()
+        #acc = 100.*correct/total
+        #if acc > self.best_acc:
+        #    self.best_acc = acc 
+        #    self.save_checkpoints()
             
     def set_parameters(self,params_dict):
         self.net.load_state_dict(params_dict)

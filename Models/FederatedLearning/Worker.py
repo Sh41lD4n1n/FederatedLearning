@@ -1,10 +1,6 @@
 import numpy as np
 import pandas as pd
 
-"""
-init Worker
-w = Worker()
-"""
 
 class Worker:
     def __init__(self,model,data):
@@ -30,8 +26,8 @@ class Worker:
         
         return #self.model.get_parameters()
         
-    def test(self,X_test):
-        return self.model.test(X_test)
+    def test(self,dataloader):
+        return self.model.test(dataloader)
     
     def describe_data(self):
         pass

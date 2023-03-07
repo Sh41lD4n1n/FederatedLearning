@@ -3,11 +3,15 @@
 #from sklearn.metrics import mean_squared_error
 #from sklearn.metrics import confusion_matrix
 from matplotlib.pyplot import figure
-
+from torch.utils.tensorboard import SummaryWriter
 
 import matplotlib.pyplot as plt
 
 import numpy as np
+
+class TensorFlowStatistic:
+    writer = SummaryWriter()
+
 
 class Statistic:
     def __init__(self,lable):
@@ -41,20 +45,42 @@ class Statistic:
         #self.y_train_proba = []
         #self.y_pred = []
         #self.y_pred_proba = []
-
+        self.writer = SummaryWriter(comment=self.lable)
+        self.writer.add_hparams(
+            {"name": self.lable},
+            {"None":1}
+        )
 
 #------------Collect
     def collect_data_description(self,data_description):
         self.data_description = data_description
 
 
+    def log_tensorboard_train(self,loss ,acc):
+        self.writer.add_scalar('Loss/train', loss, self.iterations)
+        self.writer.add_scalar('Accuracy/train', acc, self.iterations)
+        
+    
+    def log_tensorboard_test(self,loss ,acc):
+        self.writer.add_scalar('Loss/test', loss, self.iterations)
+        self.writer.add_scalar('Accuracy/test', acc, self.iterations)
+    
+    def restore_tensorborad(self):
+        for l,a in zip(self.loss,self.accuracy):
+            self.log_tensorboard_test(l,a)
 
-    def handle_test(self,loss,accuracy):
+    def handle_train(self,loss,accuracy):
         self.iter_list.append(self.iterations)
         self.iterations += 1
 
+        self.log_tensorboard_train(loss,accuracy)
+
+    def handle_test(self,loss,accuracy):
+
         self.loss.append(loss)
         self.accuracy.append(accuracy)
+        
+        self.log_tensorboard_test(loss,accuracy)
 
 #------------Loss and weights   
     def plot(self,x,y,title_name):
@@ -571,6 +597,28 @@ def comparison_plot(x1,y1,x2,y2,title_name,lable1,lable2):
 def array_mean_object(array,label):
     """This function fill: Statistic object with elements:
         loss, c_matrix,accuracy, iterations, iter_list"""
+    mean_stat = Statistic(lable = label)
+    mean_stat.iter_list,mean_stat.iterations = get_min_iter(array)
+
+    for model in array:
+        mean_stat.loss.append(model.loss[:mean_stat.iterations])
+        mean_stat.accuracy.append(model.accuracy[:mean_stat.iterations])
+    
+    mean_stat.loss = np.array(mean_stat.loss)
+    mean_stat.loss = mean_stat.loss.mean(axis=0)
+    mean_stat.loss = list(mean_stat.loss)
+
+    mean_stat.accuracy = np.array(mean_stat.accuracy)
+    mean_stat.accuracy = mean_stat.accuracy.mean(axis=0)
+    mean_stat.accuracy = list(mean_stat.accuracy)
+
+    mean_stat.restore_tensorborad()
+    return mean_stat
+
+"""
+def array_mean_object(array,label):
+    This function fill: Statistic object with elements:
+        loss, c_matrix,accuracy, iterations, iter_list
     mean_stat = Statistic(X_test=[],y_test=[],lable = label)
     mean_stat.iter_list,mean_stat.iterations = get_min_iter(array)
     mean_stat.c_matrix = np.zeros((2,2))
@@ -597,7 +645,7 @@ def array_mean_object(array,label):
     mean_stat.accuracy = list(mean_stat.accuracy)
 
     return mean_stat
-    
+"""
 """
 def loss_array_mean_plot(array):
     #array.weights = []
