@@ -33,8 +33,8 @@ class server:
     
     def run(self,n_iter,T):
         for w in self.workers:
-            w.init_model()
-        init_grad = np.linspace(0,0.7,self.n_features).reshape((self.n_features,1))
+            w.model.init_model()
+        #init_grad = np.linspace(0,0.7,self.n_features).reshape((self.n_features,1))
         #init_grad = np.random.rand(self.n_features,1)#np.zeros((self.n_features,1))
         while(n_iter>0):
             
@@ -45,7 +45,7 @@ class server:
             grad_list = []
             for i,worker in enumerate(self.workers):
                 try:
-                    worker.perform_local_steps(init_grad,n_local_steps)
+                    worker.perform_local_steps(n_local_steps)
                     grad_list.append(worker.model.get_parameters())
                 except Exception as e:
                     print(e,i)

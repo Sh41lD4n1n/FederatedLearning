@@ -61,7 +61,7 @@ class Model:
 
         self.criterion = nn.CrossEntropyLoss()
         
-        self.optimizer = Optimizer_SGD()
+        self.optimizer = Optimizer_SGD(params = self.net.parameters())
         
         
         #self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=200)
@@ -125,7 +125,7 @@ class Model:
             os.mkdir('checkpoint')
         torch.save(state, './checkpoint/{self.name}_ckpt.pth')
     
-    def init_model():
+    def init_model(self):
         pass
     
     def train(self,trainloader):

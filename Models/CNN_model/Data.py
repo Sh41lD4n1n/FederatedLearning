@@ -122,13 +122,38 @@ class Data:
         workers_idexes = [[] for _ in range(n_workers)]
 
         for i,count in zip(values,counts):
-
+            
             indxes = np.array(targets_array)[targets_array == i]
             amount = count//n_workers
 
             init_pos = 0
             for w in range(n_workers):
-                workers_idexes[w] += list(indxes[init_pos:init_pos+amount])
+
+                if w%2==0:
+                    if i < 3:
+                        current_amount = amount + int(amount*0.8)
+                    elif i<6:
+                        current_amount = amount - int(amount*0.8)
+                    elif i<8:
+                        current_amount = amount
+                    else:
+                        current_amount = amount
+
+                else:
+                    if i < 3:
+                        current_amount = amount - int(amount*0.8)
+                    elif i<6:
+                        current_amount = amount + int(amount*0.8)
+                    elif i<8:
+                        current_amount = amount + int(amount*0.6)
+                    else:
+                        current_amount = amount - int(amount*0.6)
+                
+                if (w == n_workers-1):
+                    current_amount = count - init_pos
+
+
+                workers_idexes[w] += list(indxes[init_pos:init_pos+current_amount])
                 init_pos += amount
         
         return workers_idexes

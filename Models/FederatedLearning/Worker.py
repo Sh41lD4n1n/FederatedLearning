@@ -20,12 +20,12 @@ class Worker:
         
         #self.model.set_parameters(params)
         
-        self.model.preconditioner.reset()
+        #self.model.preconditioner.reset()
 
-        if self.m_scheduler !=None:
-            self.m_scheduler.set_params(n_iter=T,size = (self.X.shape[1]+1))
+        #if self.m_scheduler !=None:
+        #    self.m_scheduler.set_params(n_iter=T,size = (self.X.shape[1]+1))
 
-        self.model.run(self,epoch,self.train_loader,self.test_loader)
+        self.model.run(epoch,self.train_loader,self.test_loader)
         
         
         return #self.model.get_parameters()
