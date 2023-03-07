@@ -61,7 +61,7 @@ class Data:
             
             testloader = (
                 torch.utils.data.DataLoader(
-                testset, batch_size=100, shuffle=False, num_workers=2))
+                testset, batch_size=128, shuffle=False, num_workers=2))
             
             dataloader.append({"trainloader":trainloader,"testloader":testloader})
         

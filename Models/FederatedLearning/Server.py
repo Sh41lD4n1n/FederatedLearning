@@ -54,5 +54,7 @@ class server:
             #Global steps
             if n_iter>=0:
                 init_grad = self.perform_global_step(grad_list)
-                self.model.set_parameters(init_grad)
+                
+                for worker in self.workers:
+                  worker.model.set_parameters(init_grad))
         
