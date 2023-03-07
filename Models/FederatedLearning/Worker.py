@@ -1,6 +1,42 @@
 import numpy as np
 import pandas as pd
 
+"""
+init Worker
+w = Worker()
+"""
+
+class Worker:
+    def __init__(self,model,data):
+        self.model = model
+        
+        self.train_loader = data["trainloader"]
+        self.test_loader = data["testloader"]
+
+        self.stat_collectors = None
+    
+    
+    def perform_local_steps(self,epoch):
+        
+        #self.model.set_parameters(params)
+        
+        self.model.preconditioner.reset()
+
+        if self.m_scheduler !=None:
+            self.m_scheduler.set_params(n_iter=T,size = (self.X.shape[1]+1))
+
+        self.model.run(self,epoch,self.train_loader,self.test_loader)
+        
+        
+        return #self.model.get_parameters()
+        
+    def test(self,X_test):
+        return self.model.test(X_test)
+    
+    def describe_data(self):
+        pass
+
+
 
 class worker:
     def __init__(self,model,X,y,m_scheduler):
@@ -47,3 +83,5 @@ class worker:
         #print(pd.DataFrame(self.X).describe())
         #return pd.DataFrame(self.X).describe()
         return description
+    
+

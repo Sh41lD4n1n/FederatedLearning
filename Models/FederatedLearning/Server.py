@@ -1,17 +1,63 @@
 import numpy as np
-#from Models.LogisticRegression.LogisticRegression import Logistic_Regression
-#from Models.LogisticRegression.LogisticRegression_layer import Logistic_Regression_train
-from Models.LogisticRegression.LogisticRegression_numpy import Logistic_Regression_numpy
 
-from Models.FederatedLearning.Worker import worker
+from Models.FederatedLearning.Worker import Worker
 
 
-#def create_model_instance(m_name,n_f,lr,epoch,stat_collector):
-#    models = {"Logistic_Regression_train":None,#Logistic_Regression_train(n_features = n_f,lr = lr,epoch = epoch,stat_collector=stat_collector),
-#              "Logistic_Regression":None,#Logistic_Regression(n_features = n_f,lr = lr,epoch = epoch,stat_collector=stat_collector),
-#              "Logistic_Regression_numpy":Logistic_Regression_numpy(n_features = n_f,lr = lr,epoch = epoch,stat_collector=stat_collector)}
-#    return models[m_name]
+class server:     
+    def __init__(self,num_workers,data,model_creator):
+        self.num_workers = num_workers
+        self.workers = self.init_workers(model_creator,data)
 
+    
+    def init_workers(self,model_creator,dataloaders):
+        w_list = []
+        
+        
+        for i,data in zip(np.arange(self.num_workers),dataloaders):
+
+            w = Worker(model = model_creator(),
+                       data = data)
+
+            w_list.append(w)
+        return w_list
+        
+
+    def perform_global_step(self,grad_dicts):
+        grad_dict = grad_dicts[0]
+        for k in grad_dict.keys():
+            grad_dict[k] = 0
+            for d in grad_dicts:
+                grad_dict += d[k]
+            grad_dict[k] /= self.num_workers
+        return grad_dict
+    
+    def run(self,n_iter,T):
+        for w in self.workers:
+            w.init_model()
+        init_grad = np.linspace(0,0.7,self.n_features).reshape((self.n_features,1))
+        #init_grad = np.random.rand(self.n_features,1)#np.zeros((self.n_features,1))
+        while(n_iter>0):
+            
+            #Local steps
+            n_local_steps = T if n_iter-T >0 else n_iter
+            n_iter -=T
+            
+            grad_list = []
+            for i,worker in enumerate(self.workers):
+                try:
+                    worker.perform_local_steps(init_grad,n_local_steps)
+                    grad_list.append(worker.model.get_parameters())
+                except Exception as e:
+                    print(e,i)
+                    raise e
+            
+            #Global steps
+            if n_iter>=0:
+                init_grad = self.perform_global_step(grad_list)
+                self.model.set_parameters(init_grad)
+            
+        
+"""
 class server:     
     def __init__(self,M_workers,X_train,y_train,
                 stat_collectors,models,data_splitter='Het',
@@ -108,7 +154,6 @@ class server:
         
         for i,X,y in zip(np.arange(self.num_workers),dataset_X,dataset_y):
             
-            
 
             w = worker(model = models[i],
                        X = X,y = y,m_scheduler=self.m_scheduler[i])
@@ -151,5 +196,5 @@ class server:
             #Global steps
             if n_iter>=0:
                 init_grad = self.perform_global_step(grad_list)
-            
+"""
         
