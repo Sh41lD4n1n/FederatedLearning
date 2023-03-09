@@ -5,6 +5,8 @@ import torch.optim as optim
 import torch.nn.functional as F
 import torch.backends.cudnn as cudnn
 
+import torch.nn.init as init
+
 import numpy as np
 
 import os
@@ -53,6 +55,76 @@ model.set_scaller(scaller)
 """
 
 
+def weight_init(m):
+    '''
+    Usage:
+        model = Model()
+        model.apply(weight_init)
+    '''
+    if isinstance(m, nn.Conv1d):
+        init.normal_(m.weight.data)
+        if m.bias is not None:
+            init.normal_(m.bias.data)
+    elif isinstance(m, nn.Conv2d):
+        init.xavier_normal_(m.weight.data)
+        if m.bias is not None:
+            init.normal_(m.bias.data)
+    elif isinstance(m, nn.Conv3d):
+        init.xavier_normal_(m.weight.data)
+        if m.bias is not None:
+            init.normal_(m.bias.data)
+    elif isinstance(m, nn.ConvTranspose1d):
+        init.normal_(m.weight.data)
+        if m.bias is not None:
+            init.normal_(m.bias.data)
+    elif isinstance(m, nn.ConvTranspose2d):
+        init.xavier_normal_(m.weight.data)
+        if m.bias is not None:
+            init.normal_(m.bias.data)
+    elif isinstance(m, nn.ConvTranspose3d):
+        init.xavier_normal_(m.weight.data)
+        if m.bias is not None:
+            init.normal_(m.bias.data)
+    elif isinstance(m, nn.BatchNorm1d):
+        init.normal_(m.weight.data, mean=1, std=0.02)
+        init.constant_(m.bias.data, 0)
+    elif isinstance(m, nn.BatchNorm2d):
+        init.normal_(m.weight.data, mean=1, std=0.02)
+        init.constant_(m.bias.data, 0)
+    elif isinstance(m, nn.BatchNorm3d):
+        init.normal_(m.weight.data, mean=1, std=0.02)
+        init.constant_(m.bias.data, 0)
+    elif isinstance(m, nn.Linear):
+        init.xavier_normal_(m.weight.data)
+        init.normal_(m.bias.data)
+    elif isinstance(m, nn.LSTM):
+        for param in m.parameters():
+            if len(param.shape) >= 2:
+                init.orthogonal_(param.data)
+            else:
+                init.normal_(param.data)
+    elif isinstance(m, nn.LSTMCell):
+        for param in m.parameters():
+            if len(param.shape) >= 2:
+                init.orthogonal_(param.data)
+            else:
+                init.normal_(param.data)
+    elif isinstance(m, nn.GRU):
+        for param in m.parameters():
+            if len(param.shape) >= 2:
+                init.orthogonal_(param.data)
+            else:
+                init.normal_(param.data)
+    elif isinstance(m, nn.GRUCell):
+        for param in m.parameters():
+            if len(param.shape) >= 2:
+                init.orthogonal_(param.data)
+            else:
+                init.normal_(param.data)
+    else:
+        raise Exception("Non initialization")
+
+
 class Model:
     def __init__(self,name):
         self.name = name
@@ -81,7 +153,7 @@ class Model:
     
     def set_scaller(self,scaller):
         self.optimizer.scaller = scaller
-    
+     
     def select_model(self):
         # net = VGG('VGG19')
         net = ResNet18()
@@ -126,7 +198,7 @@ class Model:
         torch.save(state, f'./checkpoint/{self.name}_ckpt.pth')
     
     def init_model(self):
-        pass
+        self.net.apply()
     
     def train(self,trainloader):
         #print('\nEpoch: %d' % epoch)
@@ -179,6 +251,25 @@ class Model:
         #    self.best_acc = acc 
         #    self.save_checkpoints()
             
+    
+    """
+    def set_parameters(self,params_dict):
+        self.net.load_state_dict(params_dict)
+        for group in self.param_groups:
+            for p in group['params']:
+                if p not in self.state:
+                    self.state[p] = dict()#dict(mom=torch.zeros_like(p.data))
+                #mom = self.state[p]['mom']
+                #mom = self.momentum * mom - group['lr'] * p.grad.data
+                
+                #self.w = self.w - M_scaller@(self.lr*(precond_value@der))
+                p.data -= group['lr']*p.grad.data
+    
+    #def get_parameters(self):
+    #    return self.net.state_dict()
+    
+    """
+
     def set_parameters(self,params_dict):
         self.net.load_state_dict(params_dict)
 
