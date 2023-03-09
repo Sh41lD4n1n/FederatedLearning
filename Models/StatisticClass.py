@@ -9,8 +9,8 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 
-class TensorFlowStatistic:
-    writer = SummaryWriter()
+#class TensorFlowStatistic:
+#    writer = SummaryWriter()
 
 
 class Statistic:
