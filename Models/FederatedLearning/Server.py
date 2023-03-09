@@ -56,5 +56,5 @@ class server:
                 init_grad = self.perform_global_step(grad_list)
                 
                 for worker in self.workers:
-                  worker.model.set_parameters(init_grad))
+                  worker.model.set_parameters(init_grad)
         
