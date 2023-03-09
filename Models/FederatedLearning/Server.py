@@ -15,7 +15,7 @@ class server:
         
         for i,data in zip(np.arange(self.num_workers),dataloaders):
 
-            w = Worker(model = model_creator(),
+            w = Worker(model = model_creator(i),
                        data = data)
 
             w_list.append(w)

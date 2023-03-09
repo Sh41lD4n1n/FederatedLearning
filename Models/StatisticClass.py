@@ -18,8 +18,8 @@ class Statistic:
         self.lable = lable
 
         #Weights
-        #self.weights = []
-        #self.weights_mean = []
+        self.weights = []
+        self.weights_mean = []
         #Loss
         self.loss = []
         #Iterations
@@ -72,6 +72,7 @@ class Statistic:
     def handle_train(self,loss,accuracy):
         self.iter_list.append(self.iterations)
         self.iterations += 1
+        #self.weights = weights
 
         self.log_tensorboard_train(loss,accuracy)
 
