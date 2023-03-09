@@ -254,7 +254,6 @@ class Model:
     
     """
     def set_parameters(self,params_dict):
-        self.net.load_state_dict(params_dict)
         for group in self.param_groups:
             for p in group['params']:
                 if p not in self.state:
