@@ -46,10 +46,10 @@ class Statistic:
         #self.y_pred = []
         #self.y_pred_proba = []
         self.writer = SummaryWriter(comment=self.lable)
-        self.writer.add_hparams(
-            {"name": self.lable},
-            {"None":1}
-        )
+        #self.writer.add_hparams(
+        #    {"name": self.lable},
+        #    {"None":1}
+        #)
 
 #------------Collect
     def collect_data_description(self,data_description):
