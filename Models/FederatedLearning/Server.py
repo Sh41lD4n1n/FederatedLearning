@@ -25,7 +25,7 @@ class server:
     def perform_global_step(self,grad_dicts):
         grad_dict = grad_dicts[0]
         for k in grad_dict.keys():
-            grad_dict[k] = 0
+            grad_dict[k] = torch.zeros_like(grad_dict[k])
             for d in grad_dicts:
                 grad_dict[k] += d[k]
             grad_dict[k] = (grad_dict[k]/self.num_workers).to(torch.float64)
