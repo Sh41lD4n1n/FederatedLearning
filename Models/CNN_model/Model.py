@@ -198,7 +198,8 @@ class Model:
         torch.save(state, f'./checkpoint/{self.name}_ckpt.pth')
     
     def init_model(self):
-        self.net.apply()
+        return
+        #self.net.apply(weight_init)
     
     def train(self,trainloader):
         #print('\nEpoch: %d' % epoch)
@@ -254,7 +255,7 @@ class Model:
     
     def set_parameters(self,params):
         for p_new,p in zip(params,self.net.parameters()):
-            p.data = p_new.data.copy()
+            p.data = p_new.data.clone()
 
     
     def get_parameters(self):

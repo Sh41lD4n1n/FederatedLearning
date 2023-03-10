@@ -25,12 +25,12 @@ class server:
         new_parameters = []
         param_size = len(self.workers[0].model.get_parameters() )
         for i in range(param_size):
-            param = w.model.get_parameters()[i].data
+            param = self.workers[0].model.get_parameters()[i].data
             avg_param = torch.zeros_like(param)
 
             for w in self.workers:
                 avg_param += w.model.get_parameters()[i].data.clone()
-            avg_param = (avg_param/self.num_workers).to(torch.float64)
+            avg_param = (avg_param/self.num_workers).float()
             new_parameters.append(avg_param.clone())
         
         return new_parameters
@@ -67,7 +67,8 @@ class server:
             
             #Global steps
             if n_iter>=0:
-                init_grad = self.perform_global_step(grad_list)
+                init_grad = self.perform_global_step()
+                #init_grad = self.perform_global_step(grad_list)
                 
                 for worker in self.workers:
                   worker.model.set_parameters(init_grad)
