@@ -20,8 +20,21 @@ class server:
 
             w_list.append(w)
         return w_list
-        
 
+    def perform_global_step(self):
+        new_parameters = []
+        param_size = len(self.workers[0].model.get_parameters() )
+        for i in range(param_size):
+            param = w.model.get_parameters()[i].data
+            avg_param = torch.zeros_like(param)
+
+            for w in self.workers:
+                avg_param += w.model.get_parameters()[i].data.clone()
+            avg_param = (avg_param/self.num_workers).to(torch.float64)
+            new_parameters.append(avg_param.clone())
+        
+        return new_parameters
+    """
     def perform_global_step(self,grad_dicts):
         grad_dict = grad_dicts[0]
         for k in grad_dict.keys():
@@ -30,6 +43,7 @@ class server:
                 grad_dict[k] += d[k]
             grad_dict[k] = (grad_dict[k]/self.num_workers).to(torch.float64)
         return grad_dict
+    """
     
     def run(self,n_iter,T):
         for w in self.workers:

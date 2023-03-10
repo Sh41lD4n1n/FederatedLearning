@@ -32,8 +32,7 @@ class Worker:
     def describe_data(self):
         pass
 
-
-
+"""
 class worker:
     def __init__(self,model,X,y,m_scheduler):
         self.model = model
@@ -80,4 +79,4 @@ class worker:
         #return pd.DataFrame(self.X).describe()
         return description
     
-
+"""

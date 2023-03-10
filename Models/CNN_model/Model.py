@@ -252,28 +252,23 @@ class Model:
         #    self.save_checkpoints()
             
     
-    """
-    def set_parameters(self,params_dict):
-        for group in self.param_groups:
-            for p in group['params']:
-                if p not in self.state:
-                    self.state[p] = dict()#dict(mom=torch.zeros_like(p.data))
-                #mom = self.state[p]['mom']
-                #mom = self.momentum * mom - group['lr'] * p.grad.data
-                
-                #self.w = self.w - M_scaller@(self.lr*(precond_value@der))
-                p.data -= group['lr']*p.grad.data
-    
-    #def get_parameters(self):
-    #    return self.net.state_dict()
-    
-    """
+    def set_parameters(self,params):
+        for p_new,p in zip(params,self.net.parameters()):
+            p.data = p_new.data.copy()
 
+    
+    def get_parameters(self):
+        return list(self.net.parameters())
+    
+
+    """
     def set_parameters(self,params_dict):
         self.net.load_state_dict(params_dict)
 
     def get_parameters(self):
         return self.net.state_dict()
+
+    """
 
     def run(self,epoch,train_loader,test_loader):
         for current_epoch in range(self.current_epoch, self.current_epoch+epoch):
