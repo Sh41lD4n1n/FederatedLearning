@@ -254,8 +254,9 @@ class Model:
             
     
     def set_parameters(self,params):
-        for p_new,p in zip(params,self.net.parameters()):
-            p.data = p_new.data.clone()
+        with torch.no_grad:
+            for p_new,p in zip(params,self.net.parameters()):
+                p.data = p_new.data.clone()
 
     
     def get_parameters(self):
