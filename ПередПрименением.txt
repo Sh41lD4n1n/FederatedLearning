@@ -1,0 +1,42 @@
+Структура директории
+.
+   |-Models
+   |---CNN_model
+   |-----checkpoint
+   |-----models
+   |-----Data.py			(Used)
+   |-----Model.py			(Used)
+
+   |---FederatedLearning
+   |-----Server.py			(Used)
+   |-----Worker.py   			(Used)
+
+   |---MatrixScheduler
+   |-----MatrixScheduler_identical.py	(Not-Used)
+   |-----MatrixScheduler_Uniform.py	(Not-Used)
+
+   |---Optimisers		
+   |-----Adam.py			(Not-Used)
+   |-----GD.py				(Not-Used)
+
+   |---Preconditioners
+   |-----Preconditioners.py		(Not-Used)
+
+   |--Statistic.py			(Used)
+
+   |-OtherReports
+   |-Runs_stat
+   |---runs_1
+   |-----...
+   |-Report_Colab.ipynb			(Used)
+   |-Report_Local.ipynb			(Used)
+
+Model хранит Нейроную сеть
+Worker - хранит данные и выполняет локальное обучение
+Server инициализирует все выше и усредняет параметры моделей
+
+Statistic - хранит loss/acc и записывает данные в Tensorboard
+
+Запуск моделей и вывод результатов локально и на colab:
+Report_Colab.ipynb	
+Report_Local.ipynb

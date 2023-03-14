@@ -9,10 +9,14 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 
-#class TensorFlowStatistic:
-#    writer = SummaryWriter()
 
 
+"""
+Statistic
+- класс для сбора статистики
+- хранит функции для постройки графиков
+(пока применяется только loss_plot,acc_plot, array_mean_object)
+"""
 class Statistic:
     def __init__(self,lable):
         self.lable = lable
@@ -27,8 +31,8 @@ class Statistic:
         self.iter_list = []
 
         #Accuracy
-        self.c_matrix = 0
-        self.balance_accuracy = 0
+        #self.c_matrix = 0
+        #self.balance_accuracy = 0
         self.accuracy = []
 
         #Grad_val
@@ -36,22 +40,10 @@ class Statistic:
         #self.derivative_mean = []
         #self.estimated_der = []
         
-        #Test set
-        #self.X_test = X_test
-        #self.y_test = y_test
-        
-        #Train
-        #self.y_train = []
-        #self.y_train_proba = []
-        #self.y_pred = []
-        #self.y_pred_proba = []
         self.writer = SummaryWriter(comment=self.lable)
-        #self.writer.add_hparams(
-        #    {"name": self.lable},
-        #    {"None":1}
-        #)
+        
 
-#------------Collect
+#------------Collect (сбор данных на train/test)
     def collect_data_description(self,data_description):
         self.data_description = data_description
 
@@ -83,7 +75,7 @@ class Statistic:
         
         self.log_tensorboard_test(loss,accuracy)
 
-#------------Loss and weights   
+#------------Loss and weights Вывод графиков
     def plot(self,x,y,title_name):
         plt.plot(x,y,label = self.lable)
         plt.legend()
@@ -98,6 +90,8 @@ class Statistic:
 
     def weight_plot(self):
         self.plot(self.iter_list,self.weights_mean,"weights")
+
+#------------Остальные функции в классе не используются
 #------------Derivative
     def der_mean_plot(self):
         self.plot(self.iter_list,self.derivative_mean,"derivative")
@@ -207,238 +201,6 @@ class Statistic:
         mse_val = (((other.y_pred_proba - self.y_pred_proba)**2).sum()**0.5) / self.y_pred_proba.shape[0]
         print(f"MSE({self.lable},{other.lable}) = {mse_val}")
 
-"""
-class Statistic:
-    def __init__(self,X_test,y_test,lable):
-        self.lable = lable
-
-        #Weights
-        self.weights = []
-        self.weights_mean = []
-        #Loss
-        self.loss = []
-        #Iterations
-        self.iterations = 0
-        self.iter_list = []
-
-        #Grad_val
-        self.derivative = []
-        self.derivative_mean = []
-        self.estimated_der = []
-
-        #Temporal Oasis matrix
-        self.matrix_stat = np.zeros(1)
-        self.matrix_min = []
-        self.matrix_frequent = []
-
-        #Accuracy
-        self.c_matrix = 0
-        self.balance_accuracy = 0
-        self.accuracy = []
-        
-
-        #Data
-        self.data_description = ""
-        
-        #Test set
-        self.X_test = X_test
-        self.y_test = y_test
-        
-        #Train
-        self.y_train = []
-        self.y_train_proba = []
-        self.y_pred = []
-        self.y_pred_proba = []
-
-
-#------------Collect
-    def collect_data_description(self,data_description):
-        self.data_description = data_description
-        
-    def matrix_preprocess(self,matrix):
-        om = matrix.reshape(-1).copy()
-        om = np.around(om,20)
-        om = om[om != 0]
-        
-        ""
-        if om.shape[0]==0:
-            a = np.array([100])
-            self.matrix_stat = np.concatenate([self.matrix_stat,a])
-            self.matrix_min.append(100)
-            self.matrix_frequent.append(100)
-        ""
-        
-        
-        self.matrix_stat = np.concatenate([self.matrix_stat,om])
-        self.matrix_min.append(abs(om).min(initial=10))
-        
-        val = {}
-        for i in abs(om):
-            if i not in val.keys():
-                val[i] = 1
-            else:
-                val[i] += 1
-        if len(list(val.keys()))==0:
-            self.matrix_frequent.append(10)    
-            #print(matrix)
-            return
-        idx = np.argmax(np.array(val.values()))
-        self.matrix_frequent.append(list(val.keys())[idx])
-
-
-    def handle_train(self,loss,weights,der,y_train,y_train_proba,estimated_der):
-        self.y_train = y_train
-        self.y_train_proba = y_train_proba
-
-        self.weights.append(weights)
-        self.weights_mean.append(weights.mean())
-        
-        self.loss.append(loss)
-
-        self.derivative.append(der)
-        self.derivative_mean.append(der.mean())
-        
-        self.iter_list.append(self.iterations)
-        self.iterations += 1
-
-        self.estimated_der.append(estimated_der.mean())
-        #self.diff.append(diff)
-
-        #self.matrix_preprocess(oasis_matrix)
-
-
-    def handle_test(self,y_test,y_pred,y_pred_proba):
-        self.y_pred = y_pred
-        self.y_pred_proba = y_pred_proba
-
-        self.c_matrix = confusion_matrix(y_test,y_pred)
-        self.balance_accuracy = balanced_accuracy_score(y_test,y_pred)
-        self.accuracy.append( accuracy_score(y_test,y_pred) )
-
-#------------Loss and weights   
-    def plot(self,x,y,title_name):
-        plt.plot(x,y,label = self.lable)
-        plt.legend()
-        
-        plt.xlabel("iteration")
-        plt.ylabel(title_name+" value")
-        plt.title(title_name)
-        plt.show()
-    
-    def loss_plot(self):
-        self.plot(self.iter_list,self.loss,"loss")
-
-    def weight_plot(self):
-        self.plot(self.iter_list,self.weights_mean,"weights")
-#------------Derivative
-    def der_mean_plot(self):
-        self.plot(self.iter_list,self.derivative_mean,"derivative")
-#------------Accuracy
-    def acc_plot(self):
-        self.plot(self.iter_list,self.accuracy,"accuracy")
-
-    def print_accuracy(self):
-        print(f"balanced_accuracy_score: {self.balance_accuracy}")
-        print(f"accuracy_score: {self.accuracy[-1]}")
-    
-    def plot_confusion_matrix(self):
-        
-        plt.imshow(self.c_matrix)
-
-        plt.xticks(np.arange(2), labels=['pred: false','pred: true'])
-        plt.yticks(np.arange(2), labels=['real: false','real: true'])
-        for i in range(2):
-            for j in range(2):
-                text = plt.text(j, i, self.c_matrix[i, j],
-                                ha="center", va="center", color="w")
-
-        plt.show()
-        print(self.c_matrix)
-
-#------------Data Description
-    def show_data_descr(self):
-        print(self.data_description)
-
-    def show_y_distr(self):
-        print("Train:")
-        print(f"Min val: {self.y_train.min()},Max val: {self.y_pred_proba.max()},Mean: {self.y_pred_proba.mean()}\
-            ,Var: {self.y_pred_proba.var()}")
-
-        print("Test:")
-        print(f"Min val: {self.y_pred_proba.min()},Max val: {self.y_pred_proba.max()},Mean: {self.y_pred_proba.mean()}\
-            ,Var: {self.y_pred_proba.var()}")
-        #unique, counts = np.unique(self.y_pred_proba, return_counts=True)
-        #counts = (counts-counts.min())/counts.max()
-        #plt.scatter(x = unique,y = counts,marker='.',c=y_classes)
-        #plt.scatter(x = self.y_train_proba,y = np.ones(self.y_train_proba.shape),marker='.',c=self.y_train)
-        plt.scatter(x = self.y_pred_proba,y = np.zeros(self.y_pred_proba.shape),marker='.',c=self.y_pred)
-        plt.show()
-#------------Comparison plots
-    def comparison_plot(self,x,y1,y2,names,title):
-        plt.plot(x,y1,label=names[0])
-        plt.plot(x,y2,label=names[1])
-        plt.legend(title='Models:')
-        plt.title(title)
-        plt.show()
-
-    def comparison_der_mean_plot(self,other:object):
-        iterations = min(self.iterations,other.iterations)
-        iter_list = [i for i in range(iterations)]
-        self.comparison_plot(iter_list,self.derivative_mean[:iterations],other.derivative_mean[:iterations],
-                                names=[self.lable,other.lable], title="mean derivative")
-
-    def comparison_der_plot(self,other:object,num):
-        iterations = min(self.iterations,other.iterations)
-        iter_list = [i for i in range(iterations)]
-        
-        w1 = [i[num] for i in self.derivative[:iterations]]
-        w2 = [i[num] for i in other.derivative[:iterations]]
-
-        self.comparison_plot(iter_list,w1,w2,
-                                names=[self.lable,other.lable], title=f"derivative {num}")
-
-    def comparison_loss_plot(self,other:object):
-        iterations = min(self.iterations,other.iterations)
-        iter_list = [i for i in range(iterations)]
-
-        self.comparison_plot(iter_list,self.loss[:iterations],other.loss[:iterations],
-                                names=[self.lable,other.lable], title="loss")
-        
-    
-    def comparison_weights_plot(self,other:object):
-        iterations = min(self.iterations,other.iterations)
-        iter_list = [i for i in range(iterations)]
-
-        self.comparison_plot(iter_list,self.weights_mean[:iterations],other.weights_mean[:iterations],
-                                names=[self.lable,other.lable], title="weights")
-    
-    def comparison_weight_plot(self,other:object,num):
-        iterations = min(self.iterations,other.iterations)
-        iter_list = [i for i in range(iterations)]
-        
-        w1 = [i[num] for i in self.weights[:iterations]]
-        w2 = [i[num] for i in other.weights[:iterations]]
-
-        self.comparison_plot(iter_list,w1,w2,
-                                names=[self.lable,other.lable], title=f"weights {num}")
-
-    def comparison_accuracy_plot(self,other:object):
-        iterations = min(self.iterations,other.iterations)
-        iter_list = [i for i in range(iterations)]
-
-        self.comparison_plot(iter_list,self.accuracy[:iterations],other.accuracy[:iterations],
-                                names=[self.lable,other.lable], title="accuracy")
-    
-    def comparison_mse(self,other: object):
-        elems = np.arange(len(self.y_pred_proba))
-        diff = self.y_pred_proba.reshape(-1) - other.y_pred_proba.reshape(-1)
-        #print(elems.shape,diff.shape)
-        print(f"difference({self.lable},{other.lable}) = {self.lable} - {other.lable}")
-        plt.bar(elems,diff)
-        plt.show()
-        mse_val = (((other.y_pred_proba - self.y_pred_proba)**2).sum()**0.5) / self.y_pred_proba.shape[0]
-        print(f"MSE({self.lable},{other.lable}) = {mse_val}")
-"""
 
 
 #------------Comparsion from array

@@ -9,27 +9,54 @@ import torchvision.transforms as transforms
 
 from torch.utils.data import Subset
 
-    
+"""
+Data класс
+    хранит CIFAR dataset,
+    делит его на части для nodes(workers)
+    и хранит dataloader и torch dataset.
+
+"""    
 class Data:
     SPLITS = ["het","ident","noSplit"]
+    """
+    Инициализация объекта класса Data:
+        Параметры:
+            split: тип хранения данных из SPLITS:
+                "het" - количество частей n_workers, колличество изображений
+                        из каждого класса распределено не равномерно по частям
+                "ident" - количество частей n_workers, колличество изображений
+                          из каждого класса распределено равномерно по частям
+                "noSplit" - одна часть которая хранит все изображения
+        - Хранит dataset
+        - вызывает функцию загрузки dataset
+        - вызывает функцию деления dataset
+    """
     def __init__(self,split,n_workers):
-        
+        # массив из Dataset объектов для тренировки и проверок
         self.trainset = []
         self.testset = []
+
+        #сет из имен классов и индексов классов
         self.classes = ('plane', 'car', 'bird', 'cat', 'deer',
             'dog', 'frog', 'horse', 'ship', 'truck')
         self.classes_number = [i for i in range(0,10)]
 
+        # ининциализация: загрузить dataset из torchvision
+        # и применить преобразования изображения
         self._initialize()
 
-        print(len(self.trainset))
-        print(len(self.testset))
-
+        # 
         self._split(n_workers=n_workers,split_type=split)
         
             
-    
+    """
+    Загрузка CIFAR
+    - Загружает train, test
+    - Применяет обработку данных обрезка, поворот, нормализация
+    """
     def _initialize(self):
+        
+        # Создание функций обработки для train/test
         transform_train = transforms.Compose([
             transforms.RandomCrop(32, padding=4),
             transforms.RandomHorizontalFlip(),
@@ -42,6 +69,7 @@ class Data:
             transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
         ])
 
+        # Загрузка данных директория зависит от места запуска
         self.trainset = [torchvision.datasets.CIFAR10(
             root='./data', train=True, download=True, transform=transform_train)]
         
