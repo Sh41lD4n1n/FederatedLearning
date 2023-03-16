@@ -31,7 +31,7 @@ class Data:
         - вызывает функцию загрузки dataset
         - вызывает функцию деления dataset
     """
-    def __init__(self,split,n_workers):
+    def __init__(self,split,n_workers,environment):
         # массив из Dataset объектов для тренировки и проверок
         self.trainset = []
         self.testset = []
@@ -43,7 +43,7 @@ class Data:
 
         # ининциализация: загрузить dataset из torchvision
         # и применить преобразования изображения
-        self._initialize()
+        self._initialize(environment)
 
         # 
         self._split(n_workers=n_workers,split_type=split)
@@ -54,7 +54,7 @@ class Data:
     - Загружает train, test
     - Применяет обработку данных обрезка, поворот, нормализация
     """
-    def _initialize(self):
+    def _initialize(self,environment):
         
         # Создание функций обработки для train/test
         transform_train = transforms.Compose([
@@ -70,17 +70,19 @@ class Data:
         ])
 
         # Загрузка данных директория зависит от места запуска
-        #self.trainset = [torchvision.datasets.CIFAR10(
-        #    root='./data', train=True, download=True, transform=transform_train)]
+        if environment == "kaggle":
+            self.trainset = [torchvision.datasets.CIFAR10(
+                root='/kaggle/input/federatedlearning/Models/CNN_model/data/cifar-10-python', train=True, download=False, transform=transform_train)]
+            
+            self.testset = [torchvision.datasets.CIFAR10(
+                root='/kaggle/input/federatedlearning/Models/CNN_model/data/cifar-10-python', train=False, download=False, transform=transform_test)]
+        else:
+            self.trainset = [torchvision.datasets.CIFAR10(
+                root='./data', train=True, download=True, transform=transform_train)]
+            
+            self.testset = [torchvision.datasets.CIFAR10(
+                root='./data', train=False, download=True, transform=transform_test)]
         
-        self.trainset = [torchvision.datasets.CIFAR10(
-            root='/kaggle/input/federatedlearning/Models/CNN_model/data/cifar-10-python', train=True, download=False, transform=transform_train)]
-        
-        
-        #self.testset = [torchvision.datasets.CIFAR10(
-        #    root='./data', train=False, download=True, transform=transform_test)]
-        self.testset = [torchvision.datasets.CIFAR10(
-            root='/kaggle/input/federatedlearning/Models/CNN_model/data/cifar-10-python', train=False, download=False, transform=transform_test)]
         
 
     def get_data_loaders(self):

@@ -1,0 +1,17 @@
+{
+  "id": "danilshalagin/federatedlearning-n-ident",
+  "id_no": 35924920,
+  "title": "FederatedLearning_n_ident",
+  "code_file": "federatedlearning-n-ident.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": false,
+  "enable_internet": false,
+  "keywords": [],
+  "dataset_sources": [
+    "datasets/danilshalagin/federatedlearning"
+  ],
+  "kernel_sources": [],
+  "competition_sources": []
+}
