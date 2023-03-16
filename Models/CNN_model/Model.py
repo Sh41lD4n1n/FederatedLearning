@@ -258,11 +258,12 @@ class Model:
         Записывает параматры из `params` в модель,
         итерируясь по параметрам  модели и новым значениям
     """
+    """
     def set_parameters(self,params):
         with torch.no_grad():
             for p_new,p in zip(params,self.net.parameters()):
                 p.data = p_new.data.clone()
-    
+    """
     
     """
     get_parameters
@@ -270,10 +271,10 @@ class Model:
         Возвращает параматры модели,превращая 
         итериратор в лист
     """
-
+    """
     def get_parameters(self):
         return list(self.net.parameters())
-    
+    """
 
     """
     set_parameters
@@ -288,10 +289,10 @@ class Model:
         через load_state_dict
         (принимает словарь key - имя слой, value - параметры)
     """
-    """
+    #"""
     def set_parameters(self,params_dict):
         self.net.load_state_dict(params_dict)
-    """
+    #"""
     """
     get_parameters
         (один из способов обработки параметров,
@@ -302,10 +303,10 @@ class Model:
         через load_state_dict
         (принимает словарь key - имя слой, value - параметры)
     """
-    """
+    #"""
     def get_parameters(self):
         return self.net.state_dict()
-    """
+    #"""
 
     def run(self,epoch,train_loader,test_loader):
         for current_epoch in range(self.current_epoch, self.current_epoch+epoch):
