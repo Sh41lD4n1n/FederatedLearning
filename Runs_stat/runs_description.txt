@@ -1,3 +1,7 @@
 runs_1
 - Compare Federated learning with Identical split and Model
 - 14-15 epochs
+- add Federated learing with one worker
+
+runs_2
+- 2-nd attempt Model/Identical with one worker
