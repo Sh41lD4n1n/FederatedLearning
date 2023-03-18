@@ -4,6 +4,7 @@
 #from sklearn.metrics import confusion_matrix
 from matplotlib.pyplot import figure
 from torch.utils.tensorboard import SummaryWriter
+import torch
 
 import matplotlib.pyplot as plt
 
@@ -61,10 +62,12 @@ class Statistic:
         for l,a in zip(self.loss,self.accuracy):
             self.log_tensorboard_test(l,a)
 
-    def handle_train(self,loss,accuracy):
+    def handle_train(self,loss,accuracy,weights):
         self.iter_list.append(self.iterations)
         self.iterations += 1
-        #self.weights = weights
+        
+        self.weights = torch.reshape(weights,(-1))[0]
+        self.weights_mean = torch.mean(weights)
 
         self.log_tensorboard_train(loss,accuracy)
 

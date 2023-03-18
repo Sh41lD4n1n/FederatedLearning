@@ -75,7 +75,7 @@ class server:
         (данная версия функции принимает от модели параметры (`model.parameters()`))
 
     """
-    """
+    #"""
     def perform_global_step(self):
         new_parameters = []
         #param_size колличество слоев модели
@@ -92,7 +92,7 @@ class server:
             new_parameters.append(avg_param.clone())
         
         return new_parameters
-    """
+    #"""
     """
     perform_global_step
         Усредняет веса моделей на workers
@@ -100,7 +100,7 @@ class server:
         Параметры:
             grad_dicts - лист из словарей для каждого worker
     """
-    #"""
+    """
     def perform_global_step(self,grad_dicts):
         #получить keys для словаря
         grad_dict = grad_dicts[0]
@@ -113,7 +113,7 @@ class server:
                 grad_dict[k] += d[k]
             grad_dict[k] = (grad_dict[k]/self.num_workers).to(torch.float64)
         return grad_dict
-    #"""
+    """
     
     """
     run
@@ -154,8 +154,8 @@ class server:
             
             #Глобальное усреднение
             if n_iter>=0:
-                #init_grad = self.perform_global_step()
-                init_grad = self.perform_global_step(grad_list)
+                init_grad = self.perform_global_step()
+                #init_grad = self.perform_global_step(grad_list)
                 
                 for worker in self.workers:
                   worker.model.set_parameters(init_grad)
