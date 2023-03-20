@@ -63,6 +63,8 @@ class server:
         
         for i,data in zip(np.arange(self.num_workers),dataloaders):
             #инииализация worker-а i данными data, моделью возращенной model_creator
+
+
             w = Worker(model = model_creator(i),
                        data = data)
 
@@ -77,6 +79,7 @@ class server:
     """
     #"""
     def perform_global_step(self):
+
         new_parameters = []
         #param_size колличество слоев модели
         param_size = len(self.workers[0].model.get_parameters() )
@@ -128,9 +131,8 @@ class server:
     def run(self,n_iter,T):
         
         # Инициализация worker-ов (пока не используется)
-        for w in self.workers:
-            w.model.init_model()
-        
+        #for w in self.workers:
+        #    w.model.init_model()
 
         while(n_iter>0):
             
