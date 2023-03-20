@@ -16,6 +16,7 @@ from models import *
 from utils import progress_bar
 
 
+import torch.optim as optim
 from torch.optim import Optimizer
 
 os.chdir("..")
@@ -26,6 +27,7 @@ os.chdir("CNN_model")
 Optimizer_SGD - собственная имплементация 
 SGD оптимизатора
 (пробовал использовать и Optimizer_SGD и встроенную версию SGD)
+"""
 """
 class Optimizer_SGD(Optimizer):
     
@@ -47,7 +49,7 @@ class Optimizer_SGD(Optimizer):
                 
                 #self.w = self.w - M_scaller@(self.lr*(precond_value@der))
                 p.data -= group['lr']*p.grad.data
-
+"""
 
 """
 Model:
@@ -83,7 +85,8 @@ class Model:
 
         self.criterion = nn.CrossEntropyLoss()
         
-        self.optimizer = Optimizer_SGD(params = self.net.parameters())
+        self.init_model()
+        self.optimizer = optim.SGD(self.net.parameters(), lr=0.01)#Optimizer_SGD(params = self.net.parameters())
         
         
         #self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=200)
@@ -93,6 +96,7 @@ class Model:
         
         self.current_epoch = 0
         self.stat_collector = Statistic(name)
+        
         
     """
     Запись optimizer
@@ -119,7 +123,7 @@ class Model:
     """
     def select_model(self):
         # net = VGG('VGG19')
-        net = ResNet18()
+        #net = ResNet18()
         # net = PreActResNet18()
         # net = GoogLeNet()
         # net = DenseNet121()
@@ -133,6 +137,7 @@ class Model:
         # net = EfficientNetB0()
         # net = RegNetX_200MF()
         # net = SimpleDLA()
+        net = LeNet()
         net = net.to(self.device)
         if self.device == 'cuda':
             net = torch.nn.DataParallel(net)
@@ -170,8 +175,8 @@ class Model:
     с функцией weight_init
     """
     def init_model(self):
-        return
-        #self.net.apply(weight_init)
+        #print("called")
+        self.net.apply(weight_init)
     
     """
     Тренировка модели (взято из данного github репозитория)
@@ -194,6 +199,7 @@ class Model:
             #тренировка
             inputs, targets = inputs.to(self.device), targets.to(self.device)
             self.optimizer.zero_grad()
+            #self.stat_collector.writer.add_graph(self.net,inputs)
             outputs = self.net(inputs)
             #шаг оптимизации
             loss = self.criterion(outputs, targets)
@@ -262,7 +268,7 @@ class Model:
     def set_parameters(self,params):
         with torch.no_grad():
             for p_new,p in zip(params,self.net.parameters()):
-                p.data = p_new.data.clone()
+                p.data = p.data + torch.nn.parameter.Parameter(p_new.data.clone()) - p.data
     #"""
     
     """
@@ -309,7 +315,7 @@ class Model:
     """
 
     def run(self,epoch,train_loader,test_loader):
-        for current_epoch in range(self.current_epoch, self.current_epoch+epoch):
+        for current_epoch in range(0, epoch):
             self.train(train_loader)
             self.test(test_loader)
             #self.scheduler.step()
@@ -330,9 +336,12 @@ def weight_init(m):
         if m.bias is not None:
             init.normal_(m.bias.data)
     elif isinstance(m, nn.Conv2d):
-        init.xavier_normal_(m.weight.data)
+        #init.xavier_normal_(m.weight.data)
+        init.uniform_(m.weight.data,0,0.01)
         if m.bias is not None:
-            init.normal_(m.bias.data)
+            #init.normal_(m.bias.data)
+            init.uniform_(m.bias.data,0,0.01)
+        print("Selected")
     elif isinstance(m, nn.Conv3d):
         init.xavier_normal_(m.weight.data)
         if m.bias is not None:
@@ -359,8 +368,11 @@ def weight_init(m):
         init.normal_(m.weight.data, mean=1, std=0.02)
         init.constant_(m.bias.data, 0)
     elif isinstance(m, nn.Linear):
-        init.xavier_normal_(m.weight.data)
-        init.normal_(m.bias.data)
+        #init.xavier_normal_(m.weight.data)
+        #init.normal_(m.bias.data)
+        init.uniform_(m.weight.data,0,0.01)
+        init.uniform_(m.bias.data,0,0.01)
+        print("Selected")
     elif isinstance(m, nn.LSTM):
         for param in m.parameters():
             if len(param.shape) >= 2:
@@ -386,4 +398,5 @@ def weight_init(m):
             else:
                 init.normal_(param.data)
     else:
-        raise Exception("Non initialization")
+        return
+        raise Exception(f"Non initialization {type(m)}")

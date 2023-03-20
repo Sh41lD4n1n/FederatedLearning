@@ -53,6 +53,9 @@ class Statistic:
         self.writer.add_scalar('Loss/train', loss, self.iterations)
         self.writer.add_scalar('Accuracy/train', acc, self.iterations)
         
+        self.writer.add_scalar('Weights', self.weights_mean[-1], self.iterations)
+        self.writer.add_scalar('Weights/sample', self.weights[-1], self.iterations)
+        
     
     def log_tensorboard_test(self,loss ,acc):
         self.writer.add_scalar('Loss/test', loss, self.iterations)
@@ -66,8 +69,8 @@ class Statistic:
         self.iter_list.append(self.iterations)
         self.iterations += 1
         
-        self.weights = torch.reshape(weights,(-1))[0]
-        self.weights_mean = torch.mean(weights)
+        self.weights.append( torch.reshape(weights,(-1,))[0].detach().numpy())
+        self.weights_mean.append( torch.mean(weights).detach().numpy())
 
         self.log_tensorboard_train(loss,accuracy)
 

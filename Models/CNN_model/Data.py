@@ -7,15 +7,46 @@ import numpy as np
 import torchvision
 import torchvision.transforms as transforms
 
-from torch.utils.data import Subset
+from torch.utils.data import Subset,Dataset
 
+import random
 """
 Data класс
     хранит CIFAR dataset,
     делит его на части для nodes(workers)
     и хранит dataloader и torch dataset.
 
-"""    
+"""  
+
+class MySubset(Dataset):
+    """
+    Subset of a dataset at specified indices.
+
+    Arguments:
+        dataset (Dataset): The whole Dataset
+        indices (sequence): Indices in the whole set selected for subset
+    """
+    def __init__(self, dataset, indices):
+        self.dataset = dataset
+        self.indices = indices
+        self.targets = []
+        self._init_targets()
+        #self.transform = transform
+
+    def _init_targets(self):
+        self.targets = []
+        for i in range(self.__len__()):
+            _,label = self.__getitem__(i)
+            self.targets.append(label)
+        pass
+
+    def __getitem__(self, idx):
+        im, labels = self.dataset[self.indices[idx]]
+        return im,labels #self.transform(im), labels
+
+    def __len__(self):
+        return len(self.indices)
+
 class Data:
     SPLITS = ["het","ident","noSplit"]
     """
@@ -43,6 +74,8 @@ class Data:
 
         # ининциализация: загрузить dataset из torchvision
         # и применить преобразования изображения
+        
+
         self._initialize(environment)
 
         # 
@@ -55,7 +88,6 @@ class Data:
     - Применяет обработку данных обрезка, поворот, нормализация
     """
     def _initialize(self,environment):
-        
         # Создание функций обработки для train/test
         transform_train = transforms.Compose([
             transforms.RandomCrop(32, padding=4),
@@ -72,17 +104,16 @@ class Data:
         # Загрузка данных директория зависит от места запуска
         if environment == "kaggle":
             self.trainset = [torchvision.datasets.CIFAR10(
-                root='/kaggle/input/federatedlearning/Models/CNN_model/data/cifar-10-python', train=True, download=False, transform=transform_train)]
+                root='/kaggle/input/federatedlearning/Models/CNN_model/data/cifar-10-python', train=True, download=False, transform= transform_train)]
             
             self.testset = [torchvision.datasets.CIFAR10(
                 root='/kaggle/input/federatedlearning/Models/CNN_model/data/cifar-10-python', train=False, download=False, transform=transform_test)]
         else:
             self.trainset = [torchvision.datasets.CIFAR10(
-                root='./data', train=True, download=True, transform=transform_train)]
-            
+                root='./data', train=True, download=True, transform= transform_train)]
+
             self.testset = [torchvision.datasets.CIFAR10(
-                root='./data', train=False, download=True, transform=transform_test)]
-        
+                root='./data', train=False, download=True, transform= transform_test)]
         
 
     def get_data_loaders(self):
@@ -95,7 +126,7 @@ class Data:
             
             testloader = (
                 torch.utils.data.DataLoader(
-                testset, batch_size=128, shuffle=False, num_workers=2))
+                testset, batch_size=128, shuffle=True, num_workers=2))
             
             dataloader.append({"trainloader":trainloader,"testloader":testloader})
         
@@ -128,8 +159,8 @@ class Data:
         new_dataset_train = []
         new_dataset_test = []
         for w_train,w_test in zip(workers_idexes_train,workers_idexes_test):
-            new_dataset_train.append(Subset(self.trainset[0],w_train))
-            new_dataset_test.append(Subset(self.testset[0],w_test))
+            new_dataset_train.append(MySubset(self.trainset[0],w_train))
+            new_dataset_test.append(MySubset(self.testset[0],w_test))
         
         self.trainset,self.testset = new_dataset_train.copy(),new_dataset_test.copy()
 
@@ -141,14 +172,16 @@ class Data:
 
         for i,count in zip(values,counts):
 
-            indxes = np.array(targets_array)[targets_array == i]
+            indxes = np.arange(len(targets_array))[targets_array == i]
             amount = count//n_workers
 
             init_pos = 0
             for w in range(n_workers):
                 workers_idexes[w] += list(indxes[init_pos:init_pos+amount])
                 init_pos += amount
-        
+
+        for w in range(n_workers):
+            random.shuffle(workers_idexes[w])
         return workers_idexes
     
     def _get_heterogenious_split(self, targets_array, n_workers):
@@ -188,6 +221,10 @@ class Data:
 
 
                 workers_idexes[w] += list(indxes[init_pos:init_pos+current_amount])
+                
                 init_pos += amount
         
+        for w in range(n_workers):
+            random.shuffle(workers_idexes[w])
+
         return workers_idexes
