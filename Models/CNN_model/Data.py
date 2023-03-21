@@ -146,7 +146,8 @@ class Data:
         
         if split_type =="het":
             workers_idexes_train = self._get_heterogenious_split(n_workers=n_workers,targets_array=targets_array_train)
-            workers_idexes_test = self._get_heterogenious_split(n_workers=n_workers,targets_array=targets_array_test)
+            workers_idexes_test = self._get_identical_split_index(n_workers=n_workers,targets_array=targets_array_test)
+            #workers_idexes_test = self._get_heterogenious_split(n_workers=n_workers,targets_array=targets_array_test)
         elif split_type =="ident":
             workers_idexes_train = self._get_identical_split_index(n_workers=n_workers,targets_array=targets_array_train)
             workers_idexes_test = self._get_identical_split_index(n_workers=n_workers,targets_array=targets_array_test)
@@ -163,6 +164,9 @@ class Data:
             new_dataset_test.append(MySubset(self.testset[0],w_test))
         
         self.trainset,self.testset = new_dataset_train.copy(),new_dataset_test.copy()
+
+    def _get_random_split_index():
+        pass
 
 
     def _get_identical_split_index(self,n_workers,targets_array):
@@ -190,7 +194,7 @@ class Data:
 
         for i,count in zip(values,counts):
             
-            indxes = np.array(targets_array)[targets_array == i]
+            indxes = np.arange(len(targets_array))[targets_array == i]
             amount = count//n_workers
 
             init_pos = 0

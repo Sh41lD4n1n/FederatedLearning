@@ -122,7 +122,7 @@ class Model:
     - загрузка модели на gpu
     """
     def select_model(self):
-        # net = VGG('VGG19')
+        net = VGG('VGG19')
         #net = ResNet18()
         # net = PreActResNet18()
         # net = GoogLeNet()
@@ -137,7 +137,7 @@ class Model:
         # net = EfficientNetB0()
         # net = RegNetX_200MF()
         # net = SimpleDLA()
-        net = LeNet()
+        #net = LeNet()
         net = net.to(self.device)
         if self.device == 'cuda':
             net = torch.nn.DataParallel(net)
@@ -176,6 +176,7 @@ class Model:
     """
     def init_model(self):
         #print("called")
+        return
         self.net.apply(weight_init)
     
     """
@@ -188,6 +189,7 @@ class Model:
     """
     def train(self,trainloader):
         #print('\nEpoch: %d' % epoch)
+        self.net.to(self.device)
         self.net.train()
         #loss для одной epoch
         train_loss = 0
@@ -218,12 +220,13 @@ class Model:
                         % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
         
         # запись loss/acc для train в классе statistic, и в Tensorboard
-        self.stat_collector.handle_train(loss=train_loss/(batch_idx+1),accuracy=correct/total,weights = list(self.net.parameters())[0])
+        self.stat_collector.handle_train(loss=train_loss/(batch_idx+1),accuracy=correct/total,weights = list(self.net.cpu().parameters())[0])
 
     """
     Тест модели (взято из данного github репозитория)
     """
     def test(self,testloader):
+        self.net.to(self.device)
         self.net.eval()
         test_loss = 0
         correct = 0
@@ -268,6 +271,7 @@ class Model:
     def set_parameters(self,params):
         with torch.no_grad():
             for p_new,p in zip(params,self.net.parameters()):
+                p_new.to(self.device)
                 p.data = p.data + torch.nn.parameter.Parameter(p_new.data.clone()) - p.data
     #"""
     
@@ -279,7 +283,7 @@ class Model:
     """
     #"""
     def get_parameters(self):
-        return list(self.net.parameters())
+        return list(self.net.cpu().parameters())
     #"""
 
     """
@@ -329,6 +333,7 @@ weight_init (сейчас не применяется)
     Usage:
             model = Model()
             model.apply(weight_init)
+"""
 """
 def weight_init(m):
     if isinstance(m, nn.Conv1d):
@@ -400,3 +405,4 @@ def weight_init(m):
     else:
         return
         raise Exception(f"Non initialization {type(m)}")
+"""

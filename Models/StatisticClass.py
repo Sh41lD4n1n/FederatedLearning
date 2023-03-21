@@ -55,15 +55,17 @@ class Statistic:
         
         self.writer.add_scalar('Weights', self.weights_mean[-1], self.iterations)
         self.writer.add_scalar('Weights/sample', self.weights[-1], self.iterations)
-        
+    
+                
     
     def log_tensorboard_test(self,loss ,acc):
         self.writer.add_scalar('Loss/test', loss, self.iterations)
         self.writer.add_scalar('Accuracy/test', acc, self.iterations)
     
     def restore_tensorborad(self):
-        for l,a in zip(self.loss,self.accuracy):
+        for i,(l,a) in enumerate(zip(self.loss,self.accuracy)):
             self.log_tensorboard_test(l,a)
+            self.iterations = i+1
 
     def handle_train(self,loss,accuracy,weights):
         self.iter_list.append(self.iterations)
