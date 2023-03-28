@@ -122,7 +122,7 @@ class Model:
     - загрузка модели на gpu
     """
     def select_model(self):
-        net = VGG('VGG19')
+        #net = VGG('VGG19')
         #net = ResNet18()
         # net = PreActResNet18()
         # net = GoogLeNet()
@@ -137,7 +137,7 @@ class Model:
         # net = EfficientNetB0()
         # net = RegNetX_200MF()
         # net = SimpleDLA()
-        #net = LeNet()
+        net = LeNet()
         net = net.to(self.device)
         if self.device == 'cuda':
             net = torch.nn.DataParallel(net)
