@@ -275,14 +275,13 @@ class Model:
                 p.data = p.data + torch.nn.parameter.Parameter(p_new.data.clone()) - p.data
     #"""
     
-    """
-    get_parameters
-        
-        Возвращает параматры модели,превращая 
-        итериратор в лист
-    """
+
     #"""
     def get_parameters(self):
+        """ get_parameters
+            Возвращает параматры модели,превращая 
+            итериратор в лист
+        """
         return list(self.net.cpu().parameters())
     #"""
 
