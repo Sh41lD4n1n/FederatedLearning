@@ -1,0 +1,4 @@
+- Initial
+	Implement Federated learning
+	Data splits
+	VGG/ResNet models

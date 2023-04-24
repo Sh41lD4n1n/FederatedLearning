@@ -141,22 +141,22 @@ class Data:
         targets_array_train = np.array(self.trainset[0].targets)
         targets_array_test = np.array(self.testset[0].targets)
         
+        
         workers_idexes_train = []
         workers_idexes_test = []
         
         if split_type =="het":
             workers_idexes_train = self._get_heterogenious_split(n_workers=n_workers,targets_array=targets_array_train)
-            workers_idexes_test = self._get_identical_v2_split_index(n_workers=n_workers,targets_array=targets_array_test)
-            #workers_idexes_test = self._get_heterogenious_split(n_workers=n_workers,targets_array=targets_array_test)
+            workers_idexes_test = [np.arange(len(self.testset[0].targets)) for i in range(n_workers)] #self._get_identical_v2_split_index(n_workers=n_workers,targets_array=targets_array_test)
         elif split_type =="ident":
             workers_idexes_train = self._get_identical_split_index(n_workers=n_workers,targets_array=targets_array_train)
-            workers_idexes_test = self._get_identical_v2_split_index(n_workers=n_workers,targets_array=targets_array_test)
+            workers_idexes_test = [np.arange(len(self.testset[0].targets)) for i in range(n_workers)] #self._get_identical_v2_split_index(n_workers=n_workers,targets_array=targets_array_test)
         elif split_type =="ident_same":
             workers_idexes_train = self._get_identical_v2_split_index(n_workers=n_workers,targets_array=targets_array_train)
-            workers_idexes_test = self._get_identical_v2_split_index(n_workers=n_workers,targets_array=targets_array_test)
+            workers_idexes_test = [np.arange(len(self.testset[0].targets)) for i in range(n_workers)]
         elif split_type =="random_indent":
             workers_idexes_train = self._get_random_split_index(n_workers=n_workers,targets_array=targets_array_train)
-            workers_idexes_test = self._get_identical_v2_split_index(n_workers=n_workers,targets_array=targets_array_test)
+            workers_idexes_test = [np.arange(len(self.testset[0].targets)) for i in range(n_workers)]
         elif split_type =="noSplit_test_split":
             workers_idexes_train = [[i for i in range(len(targets_array_train))]]
             workers_idexes_test = self._get_identical_v2_split_index(n_workers=n_workers,targets_array=targets_array_test)
@@ -174,7 +174,7 @@ class Data:
         
         self.trainset,self.testset = new_dataset_train.copy(),new_dataset_test.copy()
 
-    def _get_random_split_index(self,n_workers,targets_array) -> list[list]:
+    def _get_random_split_index(self,n_workers,targets_array):
         n_images = len(targets_array)
         images_array = np.random.choice(n_images,n_images, replace=False)
         workers_idexes = [[] for _ in range(n_workers)]
@@ -184,7 +184,7 @@ class Data:
             workers_idexes[w] = list(images_array[w*n_images_per_worker:(w+1)*n_images_per_worker])
         return workers_idexes
 
-    def _get_identical_v2_split_index(self,n_workers,targets_array) ->list[list]:
+    def _get_identical_v2_split_index(self,n_workers,targets_array):
         """
         Each workers has same data from worker 1
         """
@@ -195,7 +195,7 @@ class Data:
 
         return workers_idexes
 
-    def _get_identical_split_index(self,n_workers,targets_array) -> list[list]:
+    def _get_identical_split_index(self,n_workers,targets_array):
 
         (values,counts) = np.unique(targets_array, return_counts=True)
         workers_idexes = [[] for _ in range(n_workers)]
@@ -214,7 +214,7 @@ class Data:
             random.shuffle(workers_idexes[w])
         return workers_idexes
     
-    def _get_heterogenious_split(self, targets_array, n_workers) -> list[list]:
+    def _get_heterogenious_split(self, targets_array, n_workers):
         (values,counts) = np.unique(targets_array, return_counts=True)
         workers_idexes = [[] for _ in range(n_workers)]
 
