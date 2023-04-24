@@ -65,7 +65,7 @@ class Adam(Optimizer):
                 current_papareters = p.data.reshape(-1)
                 current_papareters = current_papareters.cpu()
 
-                cur_grad = p.grad.data.reshape(-1)
+                cur_grad = p.grad.data.reshape(-1,1)
                 cur_grad = cur_grad.cpu()
                 cur_grad = cur_grad.to_sparse()
                 
