@@ -18,12 +18,15 @@ class OASIS(Optimizer):
         self.alpha = alpha
         self.beta2 = beta2
         self.current_iteration = 0
+        self.loss = 0
 
         self.state = dict()
         for group in self.param_groups:
             for p in group['params']:
                 self.state[p] = dict(D_prev = 0)#dict(mom=torch.zeros_like(p.data))
     
+    def set_loss(loss):
+        self.loss = loss
     def count_v(self,second_derivative):
         z = torch.full_like(second_derivative, 0.5)
         z = torch.bernoulli(z)
