@@ -7,6 +7,7 @@ import torch
 """
 Optimizer_SGD - собственная имплементация 
 SGD оптимизатора
+(пробовал использовать и Optimizer_SGD и встроенную версию SGD)
 """
 
 
@@ -57,24 +58,26 @@ class Adam(Optimizer):
                                          current_grad = p.grad.data.detach().reshape(-1))
 
                 self.state[p]["sum"] = D_k_sum
+                device = 'cuda' if torch.cuda.is_available() else 'cpu'
                 
                 D_k_inv,_ = self.count_param_d(D_k_sum = D_k_sum)
 
-                D_k_inv = D_k_inv
-                D_k_inv = D_k_inv.cpu()
-                D_k_inv = torch.sparse.spdiags(D_k_inv,torch.tensor([0]),(D_k_inv.shape[0],D_k_inv.shape[0]))
+                D_k_inv = D_k_inv.to(device)
+                #D_k_inv = D_k_inv.cpu()
+                #D_k_inv = torch.sparse.spdiags(D_k_inv,torch.tensor([0]),(D_k_inv.shape[0],D_k_inv.shape[0]))
                 
                 current_papareters = p.data.reshape(-1)
-                current_papareters = current_papareters.cpu()
+                current_papareters = current_papareters.to(device)
 
                 cur_grad = p.grad.data.reshape(-1,1)
-                cur_grad = cur_grad.cpu()
-                cur_grad = cur_grad.to_sparse()
+                cur_grad = cur_grad.to(device)
+                #cur_grad = cur_grad.to_sparse()
                 
 
-                update_val = torch.sparse.mm(D_k_inv,cur_grad)
-                update_val = update_val.to_dense()
+                update_val = D_k_inv*cur_grad
                 update_val = update_val.reshape(-1)
+
+                assert update_val.shape[0] == current_papareters.shape[0], "invalid vector size"
 
                 current_papareters = current_papareters - group['lr']*update_val
                 current_papareters = current_papareters.to('cuda' if torch.cuda.is_available() else 'cpu')
