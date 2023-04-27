@@ -63,6 +63,7 @@ class Model:
 
         self.criterion = nn.CrossEntropyLoss()
         
+        self.is_oasis = False
 
         self.optimizer = optim.SGD(self.net.parameters(), lr=0.01)#Optimizer_SGD(params = self.net.parameters())
         
@@ -75,12 +76,16 @@ class Model:
         
         
 
-    def set_optimizer(self,opt):
+    def set_optimizer(self,opt,is_oasis=False):
         """
         Запись optimizer
         """
         self.optimizer = opt
+        self.is_oasis = is_oasis
     
+    def oasis_preprocess(self,loss_fn,targets):
+        if self.is_oasis:
+            self.optimizer.set_loss(loss_fn,targets)
     
     def select_model(self):
         """
@@ -140,7 +145,11 @@ class Model:
             outputs = self.net(inputs)
             #шаг оптимизации
             loss = self.criterion(outputs, targets)
-            loss.backward()
+            self.oasis_preprocess(loss_fn = lambda x,targets : self.criterion(x, targets),
+                                  targets = torch.tensor(targets.clone(),dtype = torch.float32))
+            loss.backward(create_graph=True)
+
+            
             self.optimizer.step()
 
             train_loss += loss.item()

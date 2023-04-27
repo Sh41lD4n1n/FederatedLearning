@@ -23,6 +23,7 @@ class Adam(Optimizer):
             for p in group['params']:
                 self.state[p] = dict(sum=0)
     
+
     def count_sum(self,prev_iter_sum,current_grad):
         assert self.current_iter>-1, "invalide current_iteration"
         
