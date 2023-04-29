@@ -63,7 +63,6 @@ class Model:
 
         self.criterion = nn.CrossEntropyLoss()
         
-        self.is_oasis = False
 
         self.optimizer = optim.SGD(self.net.parameters(), lr=0.01)#Optimizer_SGD(params = self.net.parameters())
         
@@ -81,11 +80,7 @@ class Model:
         Запись optimizer
         """
         self.optimizer = opt
-        self.is_oasis = is_oasis
-    
-    def oasis_preprocess(self,loss_fn,targets):
-        if self.is_oasis:
-            self.optimizer.set_loss(loss_fn,targets)
+
     
     def select_model(self):
         """
@@ -145,8 +140,7 @@ class Model:
             outputs = self.net(inputs)
             #шаг оптимизации
             loss = self.criterion(outputs, targets)
-            self.oasis_preprocess(loss_fn = lambda x,targets : self.criterion(x, targets),
-                                  targets = torch.tensor(targets.clone(),dtype = torch.float32))
+            
             loss.backward(create_graph=True)
 
             
@@ -162,9 +156,11 @@ class Model:
             # функция вывода состояния модели точность, loss
             #progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
             #            % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
-        
+            print("batch",batch_idx)
+            self.optimizer.zero_grad()
         # запись loss/acc для train в классе statistic, и в Tensorboard
         self.stat_collector.handle_train(loss=train_loss/(batch_idx+1),accuracy=correct/total,weights = list(self.net.cpu().parameters())[0])
+        print("iter")      
 
 
     def test(self,testloader):

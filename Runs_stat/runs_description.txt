@@ -9,3 +9,20 @@ runs_2
 runs_0304
 - Heterogenious
 
+run_2504
+- Adam run LeNet/VGG
+- VGG скачет loss на тест
+- params lr 0.001, beta 0.6
+
+run
+- SGD tune
+-- lr 0.01, 0.001,0.0001,0.005
+-- epoch 100
+
+- SGD tune
+-- lr 0.0001,0.0005
+-- epoch 200
+
+- Adam tune
+
+- OASIS
