@@ -65,9 +65,12 @@ class OASIS(Optimizer):
     #     derivative_array = torch.stack(derivative_array)
     #     return derivative_array
 
+    # def count_second_derivative(self,param):
+    #     return torch.autograd.functional.hessian(self.loss_fn,(param,self.current_targets))[0][0]\
+    #                 .reshape(torch.numel(param))
+
     def count_second_derivative(self,param):
-        return torch.autograd.functional.hessian(self.loss_fn,(param,self.current_targets))[0][0]\
-                    .reshape(torch.numel(param))
+        return torch.autograd.functional.jacobian()
 
     def step(self):
         assert self.loss_fn!=-10, "loss isnot defined"
