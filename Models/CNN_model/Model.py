@@ -60,6 +60,7 @@ class Model:
         self.name = name
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.net = self.select_model()
+        self.is_oasis = False
 
         self.criterion = nn.CrossEntropyLoss()
         
@@ -80,6 +81,7 @@ class Model:
         Запись optimizer
         """
         self.optimizer = opt
+        self.is_oasis = is_oasis
 
     
     def select_model(self):
@@ -141,7 +143,10 @@ class Model:
             #шаг оптимизации
             loss = self.criterion(outputs, targets)
             
-            loss.backward(create_graph=True)
+            if self.is_oasis:
+                loss.backward(create_graph=True)
+            else:
+                loss.backward()
 
             
             self.optimizer.step()
