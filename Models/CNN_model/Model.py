@@ -25,6 +25,8 @@ os.chdir("..")
 from StatisticClass import Statistic
 os.chdir("CNN_model")
 
+from torch.nn.utils import _stateless
+from functorch import hessian
 
 
 
@@ -83,9 +85,10 @@ class Model:
         self.optimizer = opt
         self.is_oasis = is_oasis
     
-    def oasis_preprocess(self,loss_fn,targets):
+    def oasis_preprocess(self,second_derivative):
         if self.is_oasis:
-            self.optimizer.set_loss(loss_fn,targets)
+            print(second_derivative,second_derivative.shape)
+            self.optimizer.set_der(second_derivative)
     
     def select_model(self):
         """
@@ -145,9 +148,23 @@ class Model:
             outputs = self.net(inputs)
             #шаг оптимизации
             loss = self.criterion(outputs, targets)
-            self.oasis_preprocess(loss_fn = lambda x,targets : self.criterion(x, targets),
-                                  targets = torch.tensor(targets.clone(),dtype = torch.float32))
-            loss.backward(create_graph=True)
+            
+            
+            # if self.is_oasis:
+            #     loss.backward(create_graph=True)
+            # else:
+            #     loss.backward()
+            loss.backward()
+
+
+            def model_run(params):
+                names = list(n for n, _ in self.net.named_parameters())
+                #y_hat = _stateless.functional_call(self.net, {n: p for n, p in zip(names, params)}, inputs)
+                return self.criterion(outputs, targets)
+
+            if self.is_oasis:
+                second_derivative = hessian(model_run)(tuple(self.net.parameters()) ) # torch.autograd.functional.hessian
+                self.oasis_preprocess(second_derivative = second_derivative)
 
             
             self.optimizer.step()

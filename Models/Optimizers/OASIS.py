@@ -17,17 +17,17 @@ class OASIS(Optimizer):
         self.alpha = alpha
         self.beta2 = beta2
         self.current_iteration = 0
-        self.loss_fn = -10
-        self.current_targets = 0
+        self.second_derivative = 0
+        
 
         self.state = dict()
         for group in self.param_groups:
             for p in group['params']:
                 self.state[p] = dict(D_prev = 0)#dict(mom=torch.zeros_like(p.data))
     
-    def set_loss(self,loss,targets):
-        self.loss_fn = loss
-        self.current_targets = targets
+
+    def set_der(self,second_derivative):
+        self.second_derivative = second_derivative
 
     # def check_current_iter(self,current_iter = -1):
     #     assert current_iter-1 == self.current_iteration, "Internal iteration counter is not same as external one"
@@ -66,11 +66,13 @@ class OASIS(Optimizer):
     #     return derivative_array
 
     # def count_second_derivative(self,param):
-    #     return torch.autograd.functional.hessian(self.loss_fn,(param,self.current_targets))[0][0]\
+    #     def model(params,y):
+    #         y_hat = _stateless.functional_call(model, params, x)
+    #         return self.loss_fn(y,y_hat)
+
+    #     return torch.autograd.functional.hessian(model,(param,self.current_targets))[0][0]\
     #                 .reshape(torch.numel(param))
 
-    def count_second_derivative(self,param):
-        return torch.autograd.functional.jacobian()
 
     def step(self):
         assert self.loss_fn!=-10, "loss isnot defined"
