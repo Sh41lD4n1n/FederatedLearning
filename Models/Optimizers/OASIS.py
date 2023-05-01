@@ -49,23 +49,32 @@ class OASIS(Optimizer):
 
         return D_k
 
-    def count_second_derivative(self,grad,param):
-        derivative_array = []
+    # def count_second_derivative(self,grad,param):
+    #     derivative_array = []
         
-        for g in grad:
+    #     for g in grad:
             
-            print("step1.1")
-            start_time = datetime.datetime.now()
-            ddx = torch.autograd.grad(g,param,retain_graph=True)[0].reshape(-1)
-            print((datetime.datetime.now()-start_time).seconds)
-            derivative_array.append(ddx)
+    #         print("step1.1")
+    #         start_time = datetime.datetime.now()
+    #         ddx = torch.autograd.grad(g,param,retain_graph=True)[0].reshape(-1)
+    #         print((datetime.datetime.now()-start_time).seconds)
+    #         derivative_array.append(ddx)
 
-        print("step1.2")
-        start_time = datetime.datetime.now()
-        derivative_array = torch.stack(derivative_array)
-        print((datetime.datetime.now()-start_time).seconds)
+    #     print("step1.2")
+    #     start_time = datetime.datetime.now()
+    #     derivative_array = torch.stack(derivative_array)
+    #     print((datetime.datetime.now()-start_time).seconds)
 
-        return derivative_array
+    #     return derivative_array
+
+    def count_second_derivative(self,grad,param):
+        d = torch.eye(grad.shape[0])
+        print(grad.shape[0])
+        print("step1.1")
+        
+        ddx = torch.autograd.grad(grad,param,retain_graph=True,grad_outputs=d,is_grads_batched=True)[0]
+        print(ddx.shape)
+        return ddx
 
 
     def step(self):
