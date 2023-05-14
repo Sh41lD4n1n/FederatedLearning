@@ -18,6 +18,7 @@ class OASIS(Optimizer):
         self.alpha = alpha
         self.beta2 = beta2
         self.current_iteration = 0
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         
 
         self.state = dict()
@@ -27,54 +28,71 @@ class OASIS(Optimizer):
     
 
     
-    def count_v(self,second_derivative):
-        z = torch.full_like(second_derivative, 0.5)
+    def get_z(self,grad):
+        z = torch.full_like(grad, 0.5)
         z = torch.bernoulli(z)
         z[z == 0] = -1
 
-        v = z*torch.matmul(second_derivative,z)
-        return v
+        # v = z*torch.matmul(second_derivative,z)
+        return z
 
     def count_next_D_k(self,prev_D_k,v):
         #assert cur_iter >0,'Invalide iteration value'
         #assert cur_iter == self.current_iteration, "Internal iteration counter is not same as external one"
-        if prev_D_k==0:
+
+        if type(prev_D_k) == int:
             return (1 - self.beta2)*v
-        D_k = self.beta2*prev_D_k + (1 - self.beta2)*v
+        D_k = torch.mul(self.beta2,prev_D_k) + torch.mul((1 - self.beta2),v)
         return D_k
 
     def count_alpha_cut(self,D_k):
-        D_k = torch.maximum(D_k.to_dense(),torch.tensor(self.alpha))
-        D_k = D_k.to_sparse()
+        D_k = torch.maximum(D_k,torch.tensor(self.alpha))
+        # D_k = D_k.to_sparse()
 
         return D_k
 
-    # def count_second_derivative(self,grad,param):
-    #     derivative_array = []
-        
-    #     for g in grad:
+
+    def count_v(self,grad,param,z):
+        z = z.to(self.device)
+        z = z.reshape(-1,1)
+        batch = int(1e6)
+        size = grad.shape[0]
+        steps = size//batch+1
+
+        left_border = -batch
+        right_border = 0
+        v_list = []
+        for i in range(steps):
+            left_border += batch
+            right_border  += batch
+            current_size = batch if size>=right_border else size - left_border
+            if current_size==0:
+                break
             
-    #         print("step1.1")
-    #         start_time = datetime.datetime.now()
-    #         ddx = torch.autograd.grad(g,param,retain_graph=True)[0].reshape(-1)
-    #         print((datetime.datetime.now()-start_time).seconds)
-    #         derivative_array.append(ddx)
+            current_grad = grad[left_border:right_border]
 
-    #     print("step1.2")
-    #     start_time = datetime.datetime.now()
-    #     derivative_array = torch.stack(derivative_array)
-    #     print((datetime.datetime.now()-start_time).seconds)
+            matrix = torch.eye(current_size).to(self.device)
 
-    #     return derivative_array
+            
 
-    def count_second_derivative(self,grad,param):
-        d = torch.eye(grad.shape[0])
-        print(grad.shape[0])
-        print("step1.1")
-        
-        ddx = torch.autograd.grad(grad,param,retain_graph=True,grad_outputs=d,is_grads_batched=True)[0]
-        print(ddx.shape)
-        return ddx
+            ddx = torch.autograd.grad(current_grad,param,retain_graph=True,grad_outputs=matrix,is_grads_batched=True)[0]
+            ddx = ddx.reshape(current_grad.shape[0],-1)
+            print("ddx.shape,z.shape")
+            print(ddx.shape,z.shape)
+
+            ddx = torch.matmul(ddx,z)
+            print("ddx.shape")
+            print(ddx.shape)
+            v_list.append(ddx)
+            del matrix
+        z = z.reshape(-1)
+        v_list = torch.cat(v_list,dim=0).reshape(-1)
+        print("print(v_list.shape)")
+        print(v_list.shape)
+        v = torch.mul(z,v_list)
+        v = v.reshape(-1)
+
+        return v
 
 
     def step(self):
@@ -86,47 +104,64 @@ class OASIS(Optimizer):
                     self.state[p] = dict(D_prev = 0)#dict(mom=torch.zeros_like(p.data))
 
                 layer_shape = p.data.shape
-                current_papareters = p.data.reshape(-1,1)
+                current_papareters = p.data.reshape(-1)
+                # current_papareters = current_papareters.cpu()
 
-                cur_grad = p.grad.data.reshape(-1,1)
-                print("step1")
+                cur_grad = p.grad.data.reshape(-1)
+                # cur_grad = cur_grad.cpu()
+
                 start_time = datetime.datetime.now()
-                second_derivative = self.count_second_derivative(grad = p.grad.reshape(-1),param= p)
-                print((datetime.datetime.now()-start_time).seconds)
                 
-                print("step2")
-                start_time = datetime.datetime.now()
-                v = self.count_v(second_derivative = second_derivative)
-                v = v.to_sparse()
-                print((datetime.datetime.now()-start_time).seconds)
+                v = self.count_v(grad = p.grad.reshape(-1),param= p,z=self.get_z(cur_grad))
 
-                print("step3")
+                print(1)
+                print( datetime.datetime.now() - start_time )
                 start_time = datetime.datetime.now()
+
+
                 D_k = self.count_next_D_k(prev_D_k = self.state[p]['D_prev'],v = v)#,cur_iter=current_iter)
-                print((datetime.datetime.now()-start_time).seconds)
 
-                print("step4")
+                print(2)
+                print( datetime.datetime.now() - start_time )
                 start_time = datetime.datetime.now()
+
+                
                 D_k = self.count_alpha_cut(D_k = D_k)
-                print((datetime.datetime.now()-start_time).seconds)
 
-                print("step5")
+                print(3)
+                print( datetime.datetime.now() - start_time )
                 start_time = datetime.datetime.now()
+
+                
+
                 self.state[p]['D_prev'] = D_k
                 #D_k_inv = torch.inverse(D_k**(0.5))
-                D_k_inv = D_k**(-1)
+                D_k_inv = torch.pow(D_k,-1)
+                D_k_inv = D_k_inv.reshape(-1)
+                # D_k_inv = D_k_inv.cpu()
+                
+                
 
 
-                update_val = torch.sparse.mm(D_k_inv,cur_grad)
-                update_val = update_val.to_dense()
-                update_val = update_val.reshape(-1,1)
+                # update_val = D_k_inv*cur_grad
+                # update_val = update_val.to_dense()
+                # update_val = update_val.cpu()
+                # update_val = update_val.reshape(-1,1)
 
 
-                current_papareters = current_papareters - group['lr']*update_val
-                current_papareters = current_papareters.to('cuda' if torch.cuda.is_available() else 'cpu')
+                # current_papareters = current_papareters - group['lr']*update_val
+                # current_papareters = current_papareters.to(self.device)
+
+                current_papareters = torch.addcmul(input = current_papareters, tensor1 = D_k_inv, tensor2 = cur_grad,value = -group['lr'])
+
+                print(4)
+                print( datetime.datetime.now() - start_time )
+                
                 
                 p.data = current_papareters.reshape(layer_shape)
-                print((datetime.datetime.now()-start_time).seconds)
+
+                del current_papareters
+                torch.cuda.empty_cache()
 
 
 

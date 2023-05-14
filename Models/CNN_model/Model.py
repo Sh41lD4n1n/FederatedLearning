@@ -161,11 +161,13 @@ class Model:
             # функция вывода состояния модели точность, loss
             #progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
             #            % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
-            print("batch",batch_idx)
+            
             self.optimizer.zero_grad()
         # запись loss/acc для train в классе statistic, и в Tensorboard
         self.stat_collector.handle_train(loss=train_loss/(batch_idx+1),accuracy=correct/total,weights = list(self.net.cpu().parameters())[0])
-        print("iter")      
+
+        print("iteration")
+        
 
 
     def test(self,testloader):
