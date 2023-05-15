@@ -51,45 +51,50 @@ class OASIS(Optimizer):
 
         return D_k
 
-
     def count_v(self,grad,param,z):
         z = z.to(self.device)
         z = z.reshape(-1,1)
-        # if device== GPU batch = 100 else 1e6
-        batch = 100 if torch.cuda.is_available() else int(1e6)
+        
 
+        batch = 200
         size = grad.shape[0]
         steps = size//batch+1
 
         left_border = -batch
         right_border = 0
-        v_list = []
+
+
+        # start_time1 = datetime.datetime.now()
+        
+
+        futures = []
         for i in range(steps):
             left_border += batch
             right_border  += batch
             current_size = batch if size>=right_border else size - left_border
             if current_size==0:
-                break 
-
+                break
+            
             current_grad = grad[left_border:right_border]
 
-            matrix = torch.eye(current_size).to(self.device)
+            future = torch.jit.fork(get_derivative,current_grad ,param, z,current_size)
+            futures.append(future)
 
-            
+        v_list = []
+        for future in futures:
 
-            ddx = torch.autograd.grad(current_grad,param,retain_graph=True,grad_outputs=matrix,is_grads_batched=True)[0]
-            ddx = ddx.reshape(current_grad.shape[0],-1)
-            
+            v_list.append(torch.jit.wait(future))
+        
+        # print(1.1)        
+        # print(datetime.datetime.now() - start_time1 )            
 
-            ddx = torch.matmul(ddx,z)
-            
-            v_list.append(ddx)
-            del matrix
         z = z.reshape(-1)
         v_list = torch.cat(v_list,dim=0).reshape(-1)
-        
         v = torch.mul(z,v_list)
         v = v.reshape(-1)
+
+        # print(1.4)
+        # print(datetime.datetime.now() - start_time )
 
         return v
 
