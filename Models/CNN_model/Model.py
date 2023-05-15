@@ -25,7 +25,7 @@ os.chdir("..")
 from StatisticClass import Statistic
 os.chdir("CNN_model")
 
-
+import datetime
 
 
 class Model:
@@ -134,6 +134,8 @@ class Model:
         correct = 0
         total = 0
         #применить для каждого бача из trainload
+
+        start_time = datetime.datetime.now()
         for batch_idx, (inputs, targets) in enumerate(trainloader):
             #тренировка
             inputs, targets = inputs.to(self.device), targets.to(self.device)
@@ -166,7 +168,8 @@ class Model:
         # запись loss/acc для train в классе statistic, и в Tensorboard
         self.stat_collector.handle_train(loss=train_loss/(batch_idx+1),accuracy=correct/total,weights = list(self.net.cpu().parameters())[0])
 
-        print("iteration")
+        
+        print("iteration: ",datetime.datetime.now() - start_time )
         
 
 
