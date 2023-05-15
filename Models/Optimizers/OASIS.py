@@ -55,19 +55,21 @@ class OASIS(Optimizer):
         z = z.to(self.device)
         z = z.reshape(-1,1)
         
+        # batch stat:
+        # batch 1e6, 100
+        # time  20,  
 
-        batch = 200
+        batch = 1000
         size = grad.shape[0]
         steps = size//batch+1
 
         left_border = -batch
         right_border = 0
+        v_list = []
 
+        start_time = datetime.datetime.now()
+        # print("Number of Iter:",steps)
 
-        # start_time1 = datetime.datetime.now()
-        
-
-        futures = []
         for i in range(steps):
             left_border += batch
             right_border  += batch
@@ -77,19 +79,33 @@ class OASIS(Optimizer):
             
             current_grad = grad[left_border:right_border]
 
-            future = torch.jit.fork(get_derivative,current_grad ,param, z,current_size)
-            futures.append(future)
+            matrix = torch.eye(current_size).to(self.device)
 
-        v_list = []
-        for future in futures:
+            
+            start_time1 = datetime.datetime.now()
 
-            v_list.append(torch.jit.wait(future))
-        
-        # print(1.1)        
-        # print(datetime.datetime.now() - start_time1 )            
+            ddx = torch.autograd.grad(current_grad,param,retain_graph=True,grad_outputs=matrix,is_grads_batched=True)[0]
+            ddx = ddx.reshape(current_grad.shape[0],-1)
+
+            # print(1.1)
+            # print(datetime.datetime.now() - start_time1 )
+            # start_time1 = datetime.datetime.now()
+
+            ddx = torch.matmul(ddx,z)
+            v_list.append(ddx)
+            del matrix
+
+            # print(1.2)
+            # print(datetime.datetime.now() - start_time1 )
+
+        # print(1.0)
+        # print(datetime.datetime.now() - start_time )
+        # start_time = datetime.datetime.now()
 
         z = z.reshape(-1)
         v_list = torch.cat(v_list,dim=0).reshape(-1)
+        # print("print(v_list.shape)")
+        # print(v_list.shape)
         v = torch.mul(z,v_list)
         v = v.reshape(-1)
 
@@ -118,23 +134,23 @@ class OASIS(Optimizer):
                 
                 v = self.count_v(grad = p.grad.reshape(-1),param= p,z=self.get_z(cur_grad))
 
-                print(1)
-                print( datetime.datetime.now() - start_time )
-                start_time = datetime.datetime.now()
+                # print(1)
+                # print( datetime.datetime.now() - start_time )
+                # start_time = datetime.datetime.now()
 
 
                 D_k = self.count_next_D_k(prev_D_k = self.state[p]['D_prev'],v = v)#,cur_iter=current_iter)
 
-                print(2)
-                print( datetime.datetime.now() - start_time )
-                start_time = datetime.datetime.now()
+                # print(2)
+                # print( datetime.datetime.now() - start_time )
+                # start_time = datetime.datetime.now()
 
                 
                 D_k = self.count_alpha_cut(D_k = D_k)
 
-                print(3)
-                print( datetime.datetime.now() - start_time )
-                start_time = datetime.datetime.now()
+                # print(3)
+                # print( datetime.datetime.now() - start_time )
+                # start_time = datetime.datetime.now()
 
                 
 
@@ -158,15 +174,15 @@ class OASIS(Optimizer):
 
                 current_papareters = torch.addcmul(input = current_papareters, tensor1 = D_k_inv, tensor2 = cur_grad,value = -group['lr'])
 
-                print(4)
-                print( datetime.datetime.now() - start_time )
+                # print(4)
+                # print( datetime.datetime.now() - start_time )
                 
                 
                 p.data = current_papareters.reshape(layer_shape)
 
                 del current_papareters
                 torch.cuda.empty_cache()
-        print("End of step")
+        # print("End of step")
 
 
 
