@@ -55,7 +55,9 @@ class OASIS(Optimizer):
     def count_v(self,grad,param,z):
         z = z.to(self.device)
         z = z.reshape(-1,1)
-        batch = int(1e6)
+        # if device== GPU batch = 100 else 1e6
+        batch = 100 if torch.cuda.is_available() else int(1e6)
+
         size = grad.shape[0]
         steps = size//batch+1
 
@@ -67,8 +69,8 @@ class OASIS(Optimizer):
             right_border  += batch
             current_size = batch if size>=right_border else size - left_border
             if current_size==0:
-                break
-            
+                break 
+
             current_grad = grad[left_border:right_border]
 
             matrix = torch.eye(current_size).to(self.device)
@@ -77,18 +79,15 @@ class OASIS(Optimizer):
 
             ddx = torch.autograd.grad(current_grad,param,retain_graph=True,grad_outputs=matrix,is_grads_batched=True)[0]
             ddx = ddx.reshape(current_grad.shape[0],-1)
-            print("ddx.shape,z.shape")
-            print(ddx.shape,z.shape)
+            
 
             ddx = torch.matmul(ddx,z)
-            print("ddx.shape")
-            print(ddx.shape)
+            
             v_list.append(ddx)
             del matrix
         z = z.reshape(-1)
         v_list = torch.cat(v_list,dim=0).reshape(-1)
-        print("print(v_list.shape)")
-        print(v_list.shape)
+        
         v = torch.mul(z,v_list)
         v = v.reshape(-1)
 
@@ -162,6 +161,7 @@ class OASIS(Optimizer):
 
                 del current_papareters
                 torch.cuda.empty_cache()
+        print("End of step")
 
 
 
