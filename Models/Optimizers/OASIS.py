@@ -59,7 +59,7 @@ class OASIS(Optimizer):
         # batch 1e6, 100
         # time  20,  
 
-        batch = 1000
+        batch = 10000
         size = grad.shape[0]
         steps = size//batch+1
 
